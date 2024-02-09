@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="0a3ba73e-92be-47e7-8f36-4181f5a198a1" basePath="/api" >
+		<http:request-connection protocol="HTTPS" host="reqres.in" port="443" />
+	</http:request-config>
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="e86952ed-9bce-40ec-894d-e455dc9448c7" >
+		<wsc:connection wsdlLocation="Wsld\calc.wsdl" service="Calculator" port="CalculatorSoap" address="http://www.dneonline.com/calculator.asmx">
+			<wsc:web-service-security actor="http://schemas.xmlsoap.org/soap/actor/next" />
+		</wsc:connection>
+	</wsc:config>
+	<!-- [STUDIO:"subscribeFlow"]<flow name="subscribeFlow" doc:id="0bc12625-6ef3-49c8-bcbb-3049bb4d2b12" >
+		<http:listener doc:name="Listener" doc:id="5c3a4dec-58f9-4f96-9b2e-f7c24186706a" config-ref="HTTP_Listener_config" path="testing/{ID}" allowedMethods="GET"/>
+		<logger level="INFO" doc:name="Logger" doc:id="4033707b-69d7-400b-ac70-718726e09201" message="#[attributes.uriParams.'ID'&#93;"/>
+		<http:request method="GET" doc:name="Request" doc:id="d3c0daa3-bfad-496d-b0fa-28206f8bc19b" config-ref="HTTP_Request_configuration" path="/users/{ID}">
+			<http:uri-params ><![CDATA[#[output application/java
+&#45;&#45;-
+{
+	"ID" : attributes.uriParams.'ID'
+}&#93;&#93;&#93;></http:uri-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="9d6d972b-e50c-4aef-84c8-4919823888e1" message="#[payload&#93;"/>
+	</flow> [STUDIO] -->
+	<flow name="subscribeFlow" doc:id="bf200025-ce68-4dea-a6fe-ca73a4c72b33" >
+		<http:listener doc:name="Listener" doc:id="8f924ddb-a041-42da-8806-83746565ea44" config-ref="HTTP_Listener_config" path="testing/"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2099beb2-d98f-4ee6-989f-443a138e56a6" message="Hi i am good how are you"/>
+		<ee:transform doc:name="Transform Message" doc:id="a05e160c-6a75-4b84-b9ad-d1e6b21c3e29" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://tempuri.org/
+---
+{
+	ns0#Add: {
+		ns0#intA: payload.firstNumber,
+		ns0#intB: payload.secondNumber
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume operation="Add" doc:name="Consume" doc:id="19d9332c-954b-444f-b785-8bb4a6f2fb06" config-ref="Web_Service_Consumer_Config"/>
+		<ee:transform doc:name="Transform Message" doc:id="4e0f9e2a-a82d-4c29-bd03-0bd6632d5a10" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0ns ns0 http://tempuri.org/
+
+output application/json
+---
+{
+	"result":payload.body.ns0#AddResponse.ns0#AddResult
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

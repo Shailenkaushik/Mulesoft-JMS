@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="e57870ef-8e61-49ee-9f0f-f5e02c5d4dcb" basePath="test" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="40e614fe-9a3a-4f68-8aa9-8dfd2cff8ffd" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="jmsFlow" doc:id="cd12c5eb-a91a-45b7-8a7b-7a1307b45491" >
+		<!-- [STUDIO:"Scheduler"]<scheduler doc:name="Scheduler" doc:id="319f180f-c332-4ff8-b01a-8c2487d5f555">
+			<scheduling-strategy>
+				<fixed-frequency frequency="2" timeUnit="MINUTES" />
+			</scheduling-strategy>
+		</scheduler> [STUDIO] -->
+		<logger level="INFO" doc:name="Logger" doc:id="376bf13c-71ba-4fe9-9a20-746980776f49" message="Publishing jms"/>
+		<ee:transform doc:name="Transform Message" doc:id="85ab1c7a-574d-4179-ba5f-2cd2719b02a2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"hi":"raja",
+	"bi":"kaja"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<jms:publish doc:name="Publish" doc:id="30e670bd-7f3f-419f-827a-0251d068c246" config-ref="JMS_Config" destination="data-queue">
+			<jms:message outboundContentType="application/json" />
+		</jms:publish>
+		<logger level="INFO" doc:name="Logger" doc:id="5e1f4a19-5ed3-4ec2-90cd-033abd9bc241" message="scuccess"/>
+	</flow>
+</mule>
